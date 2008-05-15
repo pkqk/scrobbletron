@@ -1,20 +1,23 @@
 require 'rubygems'
 require 'librmpd'
 
-config = {
-  :host => 'localhost',
-  :port => 6600
-}
+$config = [ 'stealthnux', 6600 ]
 
 class MpdScrobbler
   def run
-    @mpd = MPD.new
+    @mpd = MPD.new(*$config)
+    @current_song = nil
     @mpd.register_callback(method(:time_callback), MPD::TIME_CALLBACK)
     @mpd.connect(true);
   end
   
   def time_callback(*args)
-    puts "time callback", args.inspect
+    if @mpd.current_song != @current_song
+      @current_song = @mpd.current_song
+      puts "\r#{@current_song.inspect}"
+    end
+    $stdout.write "\r"+args.join('/')
+    $stdout.flush
   end
   
   def wait_for_mpd_thread
