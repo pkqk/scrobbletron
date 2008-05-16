@@ -18,7 +18,7 @@ class MpdScrobbler
     if @mpd.current_song != @current_song
       @current_song = @mpd.current_song
       @scrobbled_song = false
-      now_playing(@current_song)
+      now_playing(@current_song) if @current_song
     end
   end
 
