@@ -5,9 +5,10 @@ $lastfm = {
   :user => 'pkqk',
   :password => 'nufink'
 }
-AUDIOSCROBBLER_URL = "http://post.audioscrobbler.com"
+AUDIOSCROBBLER_URL = "post.audioscrobbler.com"
 
 class Scrobbler
+  class ConnectError < StandardError; end
 
   def initialize(config)
     @config = config
@@ -21,32 +22,39 @@ class Scrobbler
       'p' => '1.2',
       'c' => 'tst',
       'v' => '1.0',
-    }.merge(
       'u' => @config[:user],
       'a' => auth(@config[:password],@timestamp),
       't' => @timestamp
-    )
+    }
     qs = params.collect { |kv| kv.join('=') }.join('&')
     response = @net.get("/?#{qs}")
-    if response.code == 200
+    if response.code.to_i == 200
       info = response.body.split("\n")
       code = info.shift
       if code == "OK"
         @token, @np_url, @submit_url = info
+        @now_playing = Net::HTTP.new(URI.parse(@np_url))
+        @submit = Net::HTTP.new(URI.parse(@submit_url))
       else
-        puts code
-        raise SystemExit, 1
+        raise ConnectError, "Handshake response: #{code}" 
       end
     else
-      puts "Handshake failed"
-      raise SystemExit, response.code
+      raise ConnectError, "Handshake failed: #{response.code}"
     end
   end
 
-  def now_playing
+  def now_playing(args)
+    params = {
+      's' => @token,
+      'a' => args.artist,
+      't' => args.title,
+
+
+
+    }
   end
 
-  def scrobble
+  def scrobble(args)
   end
   
   protected
