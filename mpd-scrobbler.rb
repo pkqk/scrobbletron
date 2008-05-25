@@ -23,7 +23,7 @@ class MpdScrobbler
   end
 
   def time_step(time,total)
-    return if total == 0
+    return if total == 0 || @current_song.nil?
     $stdout.write "\r#{time}/#{total}"
     $stdout.flush
     unless total < 30
