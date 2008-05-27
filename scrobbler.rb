@@ -1,18 +1,20 @@
 require 'net/http'
 require 'digest'
 
-$lastfm = {
-  :user => 'pkqk',
-  :password => 'nufink'
-}
-AUDIOSCROBBLER_URL = "post.audioscrobbler.com"
-
 class Scrobbler
-  class ConnectError < StandardError; end
+  CONFIG = {
+    :user => 'pkqk',
+    :password => 'nufink'
+  }
 
-  def initialize(config)
+  AUDIOSCROBBLER = "post.audioscrobbler.com"
+  class ConnectError < StandardError; end
+  class UpdateError < StandardError; end
+  class SubmitError < StandardError; end
+
+  def initialize(config=CONFIG)
     @config = config
-    @net = Net::HTTP.new(AUDIOSCROBBLER_URL,80)
+    @net = Net::HTTP.new(AUDIOSCROBBLER,80)
   end
 
   def handshake
@@ -26,15 +28,15 @@ class Scrobbler
       'a' => auth(@config[:password],@timestamp),
       't' => @timestamp
     }
-    qs = params.collect { |kv| kv.join('=') }.join('&')
+    qs = encode_params(params)
     response = @net.get("/?#{qs}")
     if response.code.to_i == 200
       info = response.body.split("\n")
       code = info.shift
       if code == "OK"
         @token, @np_url, @submit_url = info
-        @now_playing = Net::HTTP.new(URI.parse(@np_url))
-        @submit = Net::HTTP.new(URI.parse(@submit_url))
+        @now_playing = URI.parse(@np_url)
+        @submit = URI.parse(@submit_url)
       else
         raise ConnectError, "Handshake response: #{code}" 
       end
@@ -43,21 +45,35 @@ class Scrobbler
     end
   end
 
-  def now_playing(args)
-    params = {
-      's' => @token,
-      'a' => args.artist,
-      't' => args.title,
-
-
-
-    }
+  def now_playing(song)
+    params = track_params(song).merge('s' => @token)
+    r = Net::HTTP.post_form(@now_playing, params)
+    return r.body
   end
 
-  def scrobble(args)
+  def scrobble(song, played_at)
+    params = {}
+    track_params(song).merge('o' => 'P', 'r' => '', 'i' => played_at.to_s).collect { |k,v| params["#{k}[0]"] = v }
+    params = params.merge('s' => @token)
+    r = Net::HTTP.post_form(@submit, params)
+    return r.body
   end
   
   protected
+  
+  def track_params(song)
+    params = {
+      'a' => song.artist,
+      't' => song.title,
+      'b' => song.album,
+      'l' => song.time ,
+      'n' => song.track || '', 
+      'm' => ''
+    }
+  end
+  def encode_params(params)
+    params.collect { |kv| kv.join('=') }.join('&')
+  end
   def auth(password, timestamp)
     Digest::MD5.hexdigest(Digest::MD5.hexdigest(password)+timestamp.to_s)
   end
