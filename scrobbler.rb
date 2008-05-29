@@ -47,16 +47,30 @@ class Scrobbler
 
   def now_playing(song)
     params = track_params(song).merge('s' => @token)
+    first = true
+  begin
     r = Net::HTTP.post_form(@now_playing, params)
     return r.body
+  rescue
+    handshake
+    first = false
+    retry if first
+  end
   end
 
   def scrobble(song, played_at)
     params = {}
     track_params(song).merge('o' => 'P', 'r' => '', 'i' => played_at.to_s).collect { |k,v| params["#{k}[0]"] = v }
     params = params.merge('s' => @token)
+    first = true
+  begin
     r = Net::HTTP.post_form(@submit, params)
     return r.body
+  rescue
+    handshake
+    first = false
+    retry if first
+  end
   end
   
   protected
