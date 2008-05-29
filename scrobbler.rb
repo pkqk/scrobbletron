@@ -47,30 +47,13 @@ class Scrobbler
 
   def now_playing(song)
     params = track_params(song).merge('s' => @token)
-    first = true
-  begin
-    r = Net::HTTP.post_form(@now_playing, params)
-    return r.body
-  rescue
-    handshake
-    first = false
-    retry if first
-  end
+    post_request(@now_playing, params)
   end
 
   def scrobble(song, played_at)
     params = {}
     track_params(song).merge('o' => 'P', 'r' => '', 'i' => played_at.to_s).collect { |k,v| params["#{k}[0]"] = v }
-    params = params.merge('s' => @token)
-    first = true
-  begin
-    r = Net::HTTP.post_form(@submit, params)
-    return r.body
-  rescue
-    handshake
-    first = false
-    retry if first
-  end
+    post_request(@submit, params)
   end
   
   protected
@@ -88,6 +71,17 @@ class Scrobbler
   def encode_params(params)
     params.collect { |kv| kv.join('=') }.join('&')
   end
+  
+  def post_request(url, params)
+    first = true
+    r = Net::HTTP.post_form(url, params.merge('s' => @token))
+    if r.body == 'BADSESSION'
+      handshake
+      r = Net::HTTP.post_form(url, params.merge('s' => @token))
+    end
+    return r.body
+  end
+  
   def auth(password, timestamp)
     Digest::MD5.hexdigest(Digest::MD5.hexdigest(password)+timestamp.to_s)
   end
