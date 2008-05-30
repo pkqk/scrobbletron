@@ -1,15 +1,18 @@
 #!/usr/bin/env ruby
 require 'rubygems'
 require 'librmpd'
+require 'yaml'
 
 require 'scrobbler'
 
-$config = [ 'stealthnux', 6600 ]
+File.open('config') do |f|
+  $config = YAML.load(f.read)
+end
 
 class MpdScrobbler
   def run
-    @mpd = MPD.new(*$config)
-    @scrobbler = Scrobbler.new
+    @mpd = MPD.new($config['hostname'], $config['port'])
+    @scrobbler = Scrobbler.new($config)
     @scrobbler.handshake
     @current_song = nil
     @scrobble_song = false

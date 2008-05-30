@@ -2,17 +2,12 @@ require 'net/http'
 require 'digest'
 
 class Scrobbler
-  CONFIG = {
-    :user => 'pkqk',
-    :password => 'nufink'
-  }
-
   AUDIOSCROBBLER = "post.audioscrobbler.com"
   class ConnectError < StandardError; end
   class UpdateError < StandardError; end
   class SubmitError < StandardError; end
 
-  def initialize(config=CONFIG)
+  def initialize(config)
     @config = config
     @net = Net::HTTP.new(AUDIOSCROBBLER,80)
   end
@@ -24,8 +19,8 @@ class Scrobbler
       'p' => '1.2',
       'c' => 'tst',
       'v' => '1.0',
-      'u' => @config[:user],
-      'a' => auth(@config[:password],@timestamp),
+      'u' => @config['user'],
+      'a' => auth(@config['password'],@timestamp),
       't' => @timestamp
     }
     qs = encode_params(params)
