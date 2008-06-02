@@ -38,6 +38,9 @@ class Scrobbler
     else
       raise ConnectError, "Handshake failed: #{response.code}"
     end
+    puts "Connection OK"
+    puts "now_playing: #{@np_url}"
+    puts "submit: #{@submit_url}"
   end
 
   def now_playing(song)
@@ -68,12 +71,17 @@ class Scrobbler
   end
   
   def post_request(url, params)
-    first = true
-    r = Net::HTTP.post_form(url, params.merge('s' => @token))
+    submit_params = params.merge('s' => @token)
+    r = Net::HTTP.post_form(url, submit_params)
     if r.body == 'BADSESSION'
       handshake
-      r = Net::HTTP.post_form(url, params.merge('s' => @token))
+      r = Net::HTTP.post_form(url, submit_params)
     end
+    return r.body
+  rescue Errno::ECONNREFUSED
+    puts "connection refused, retrying"
+    puts "url: #{url}"
+    r = Net::HTTP.post_form(url, submit_params)
     return r.body
   end
   
