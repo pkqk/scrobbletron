@@ -78,8 +78,8 @@ class Scrobbler
       r = Net::HTTP.post_form(url, submit_params)
     end
     return r.body
-  rescue Errno::ECONNREFUSED
-    puts "connection refused, retrying"
+  rescue Errno => e
+    puts "error: #{e}, retrying"
     puts "url: #{url}"
     r = Net::HTTP.post_form(url, submit_params)
     return r.body
