@@ -73,7 +73,7 @@ class Scrobbler
   def post_request(url, params)
     submit_params = params.merge('s' => @token)
     r = Net::HTTP.post_form(url, submit_params)
-    if r.body == 'BADSESSION'
+    if r.body.chomp == 'BADSESSION'
       handshake
       r = Net::HTTP.post_form(url, submit_params)
     end
