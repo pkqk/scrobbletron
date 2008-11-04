@@ -50,8 +50,7 @@ class MpdScrobbler
   end
 
   def scrobble(song, timestamp)
-    puts "\nscrobble #{fmt_song(song)}"
-    puts @scrobbler.scrobble(song, timestamp)
+    puts "\nscrobble #{fmt_song(song)}: #{@scrobbler.scrobble(song, timestamp)}"
   end
 
   def now_playing(song)
