@@ -7,8 +7,11 @@ class Scrobbler
   class UpdateError < StandardError; end
   class SubmitError < StandardError; end
 
-  def initialize(config)
-    @config = config
+  attr_reader :user, :pass
+
+  def initialize(user, pass)
+    @user = user
+    @pass = pass
     @net = Net::HTTP.new(AUDIOSCROBBLER,80)
   end
 
@@ -19,8 +22,8 @@ class Scrobbler
       'p' => '1.2',
       'c' => 'tst',
       'v' => '1.0',
-      'u' => @config['user'],
-      'a' => auth(@config['password'],@timestamp),
+      'u' => user,
+      'a' => auth(pass, @timestamp),
       't' => @timestamp
     }
     qs = encode_params(params)

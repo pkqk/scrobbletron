@@ -1,21 +1,25 @@
 #!/usr/bin/env ruby
 require 'rubygems'
 require 'librmpd'
-require 'yaml'
 
 require 'scrobbler'
 
-File.open('config') do |f|
-  $config = YAML.load(f.read)
-end
-
 class MpdScrobbler
-  def run
-    @mpd = MPD.new($config['hostname'], $config['port'])
-    @scrobbler = Scrobbler.new($config)
-    @scrobbler.handshake
+
+  def initialize(opts={})
+    @host = opts['hostname'] || 'localhost'
+    @port = opts['port'] || 6600
+    @user = opts['user'] || raise(ArgumentError, "You must supply your last.fm username")
+    @pass = opts['password'] || raise(ArgumentError, "You must supply your last.fm password")
+    @verbose = opts['verbose']
+    @mpd = MPD.new(@host, @port)
+    @scrobbler = Scrobbler.new(@user, @pass)
     @current_song = nil
     @scrobble_song = false
+  end
+
+  def run
+    @scrobbler.handshake
     @mpd.register_callback(method(:song_change), MPD::CURRENT_SONG_CALLBACK)
     @mpd.register_callback(method(:time_step), MPD::TIME_CALLBACK)
     @mpd.connect(true);
@@ -72,6 +76,3 @@ class MpdScrobbler
   end
 end
 
-(watcher = MpdScrobbler.new).run
-%w(INT TERM).each { |s| trap(s) { watcher.stop } }
-watcher.wait_for_mpd_thread
