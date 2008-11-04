@@ -38,11 +38,13 @@ class MpdScrobbler
 
   def time_step(time,total)
     return if total == 0 || @current_song.nil?
-    $stdout.write "\r%#{total.to_s.size}s/#{total}" % time
-    $stdout.flush
-    unless total < 30
-      if @current_song.time == total.to_s && (time > 240 || time.to_f/total.to_f > 0.5)
-        @scrobble_song = [@current_song, @started_playing] 
+    if $stdout.tty? and @verbose
+      $stdout.write "\r%#{total.to_s.size}s/#{total}" % time
+      $stdout.flush
+      unless total < 30
+        if @current_song.time == total.to_s && (time > 240 || time.to_f/total.to_f > 0.5)
+          @scrobble_song = [@current_song, @started_playing]
+        end
       end
     end
   end
