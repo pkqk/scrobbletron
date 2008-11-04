@@ -11,7 +11,8 @@ class MpdScrobbler
     @port = opts['port'] || 6600
     @user = opts['user'] || raise(ArgumentError, "You must supply your last.fm username")
     @pass = opts['password'] || raise(ArgumentError, "You must supply your last.fm password")
-    @verbose = opts['verbose']
+    @verbose = true
+    @verbose = opts['verbose'] if opts['verbose']
     @mpd = MPD.new(@host, @port)
     @scrobbler = Scrobbler.new(@user, @pass)
     @current_song = nil
