@@ -54,7 +54,11 @@ class MpdScrobbler
   end
 
   def now_playing(song)
-    puts "\nNow Playing: #{fmt_song(song)}: #{@scrobbler.now_playing(song)}"
+    if @verbose
+      puts "\nNow Playing: #{fmt_song(song)}: #{@scrobbler.now_playing(song)}"
+    else
+      @scrobbler.now_playing(song)
+    end
   end
 
   def fmt_song(song)
