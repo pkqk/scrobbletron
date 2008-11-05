@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 require 'rubygems'
 require 'mpd_scrobbler'
 require 'yaml'
